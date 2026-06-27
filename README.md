@@ -7,6 +7,13 @@ the backend persists calculation history.
   (no `eval`) computes results locally.
 - **Backend** — FastAPI + SQLModel + SQLite. Stores and serves calculation history.
 
+## Features
+
+- Arithmetic with correct precedence: `+`, `−`, `×`, `÷`
+- Exponentiation `^` (right-associative) and parentheses for grouping
+- Full keyboard support — digits, `+ - * / ^ ( )`, `Enter`/`=`, `Backspace`, `Esc`
+- Calculation history persisted via the backend, with per-entry delete
+
 ## Project structure
 
 ```
@@ -22,7 +29,7 @@ repo_one/
 │       ├── App.tsx          # orchestrates calculator + history
 │       ├── components/      # Calculator, History
 │       ├── api/history.ts   # typed fetch wrappers (base URL from VITE_API_URL)
-│       └── utils/evaluate.ts # two-pass expression evaluator
+│       └── utils/evaluate.ts # recursive-descent expression evaluator
 ├── CLAUDE.md                # architecture notes & conventions
 └── DEPLOYMENT_MEMO.md       # deployment status & next steps
 ```
@@ -82,7 +89,8 @@ cd backend && pytest
 cd frontend && npx vitest run
 ```
 
-CI runs both suites on push and pull request (`.github/workflows/ci.yml`).
+CI builds the frontend (`npm run build`) and runs both test suites on push and
+pull request (`.github/workflows/ci.yml`).
 
 ## API
 
@@ -95,7 +103,9 @@ CI runs both suites on push and pull request (`.github/workflows/ci.yml`).
 ## Notes
 
 - Expression operators use Unicode characters: `−` (U+2212), `×` (U+00D7),
-  `÷` (U+00F7); `+` is standard ASCII. These must stay consistent across the
-  calculator UI, the evaluator, and any test fixtures.
+  `÷` (U+00F7); `+`, `^`, `(`, `)` are standard ASCII. These must stay consistent
+  across the calculator UI, the evaluator, and any test fixtures.
+- Keyboard input is translated to button labels via `KEY_MAP` in
+  `Calculator.tsx` — e.g. the `-` `*` `/` keys map to `−` `×` `÷`.
 - Deployment is not yet set up — see [DEPLOYMENT_MEMO.md](DEPLOYMENT_MEMO.md)
   for the current plan (Vercel + Supabase) and required changes.
