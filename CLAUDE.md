@@ -20,7 +20,7 @@ cd frontend && npx vitest run                      # all tests
 cd frontend && npx vitest run Calculator           # single test file
 ```
 
-**CI** runs both suites automatically on push/PR via `.github/workflows/ci.yml`.
+**CI** builds the frontend (`npm run build`, which includes `tsc`) and runs both test suites automatically on push/PR via `.github/workflows/ci.yml`.
 
 ## Architecture Overview
 
@@ -33,9 +33,9 @@ Full-stack minimalist calculator. The frontend works standalone; the backend onl
 - `main.py` — FastAPI app with lifespan (creates tables), CORS for localhost:5173, mounts router
 
 **Frontend** (`frontend/src/`):
-- `utils/evaluate.ts` — hand-rolled two-pass expression evaluator (no `eval`). First pass resolves `×`/`÷`, second resolves `+`/`−`. Uses Unicode minus `−` and multiply `×` throughout.
+- `utils/evaluate.ts` — hand-rolled recursive-descent expression evaluator (no `eval`). Precedence low→high: `+`/`−` < `×`/`÷` < `^` (right-associative) < parentheses. Uses Unicode `−`/`×`/`÷` and ASCII `+`/`^`/`(`/`)`.
 - `api/history.ts` — typed fetch wrappers; base URL from `VITE_API_URL` env var (defaults to `http://localhost:8000`)
-- `components/Calculator.tsx` — owns expression state; button grid maps clicks to expression edits or an evaluate+save call
+- `components/Calculator.tsx` — owns expression state; a button grid and a global `keydown` listener both feed input through `handleButton`. `KEY_MAP` translates keyboard keys (`- * / ^ ( )`, `Enter`, `Backspace`, `Escape`) to button labels.
 - `components/History.tsx` — pure display component; receives entries and `onDelete` from App
 - `App.tsx` — orchestrates: fetches history on mount, passes `onResult` to Calculator which triggers a POST + state update
 
@@ -43,6 +43,6 @@ Full-stack minimalist calculator. The frontend works standalone; the backend onl
 
 ## Key Conventions
 
-- Operators in expressions use Unicode: `−` (U+2212), `×` (U+00D7), `÷` (U+00F7). The `+` is standard ASCII. All four must be consistent between `Calculator.tsx` (input), `evaluate.ts` (parsing), and any test fixtures.
+- Operators in expressions use Unicode: `−` (U+2212), `×` (U+00D7), `÷` (U+00F7); `+`, `^`, `(`, `)` are ASCII. These must be consistent between `Calculator.tsx` (button labels + `KEY_MAP`), `evaluate.ts` (tokenizer/parser), and any test fixtures. Keyboard keys (`- * /`) map to the Unicode symbols via `KEY_MAP`.
 - Backend test fixtures override `get_session` via `app.dependency_overrides` — always use in-memory SQLite (`sqlite://`) with `StaticPool` to keep tests isolated and fast.
 - Frontend test files query the display via `document.querySelector('.display__expr')` rather than `getByText` to avoid ambiguity with digit buttons that share the same text content.
