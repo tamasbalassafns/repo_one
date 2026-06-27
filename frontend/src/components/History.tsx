@@ -1,4 +1,4 @@
-import { HistoryEntry } from '../api/history'
+import type { HistoryEntry } from '../api/history'
 
 interface Props {
   entries: HistoryEntry[]
