@@ -34,6 +34,15 @@ repo_one/
 
 ## Getting started
 
+### Quick start (Windows)
+
+Double-click **`dev.cmd`** (or run `.\dev.ps1` from a terminal) to launch both
+servers at once, each in its own window. The first time — or after dependency
+changes — run `.\dev.cmd -Setup` to install dependencies first. Then open
+http://localhost:5173.
+
+### Manual start
+
 Run the backend and frontend in two separate terminals.
 
 ### Backend (http://localhost:8000)
