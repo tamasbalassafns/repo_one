@@ -1,4 +1,9 @@
-export type Token = { type: 'number'; value: number } | { type: 'op'; value: string }
+export type Token =
+  | { type: 'number'; value: number }
+  | { type: 'op'; value: string }
+  | { type: 'paren'; value: '(' | ')' }
+
+const OPERATORS = ['+', '−', '×', '÷', '^']
 
 function tokenize(expr: string): Token[] {
   const tokens: Token[] = []
@@ -10,7 +15,10 @@ function tokenize(expr: string): Token[] {
       let num = ''
       while (i < expr.length && '0123456789.'.includes(expr[i])) num += expr[i++]
       tokens.push({ type: 'number', value: parseFloat(num) })
-    } else if (['+', '−', '×', '÷'].includes(ch)) {
+    } else if (ch === '(' || ch === ')') {
+      tokens.push({ type: 'paren', value: ch })
+      i++
+    } else if (OPERATORS.includes(ch)) {
       tokens.push({ type: 'op', value: ch })
       i++
     } else {
@@ -20,42 +28,74 @@ function tokenize(expr: string): Token[] {
   return tokens
 }
 
+// Recursive-descent parser. Precedence (low → high):
+//   expr   :  + −           (left-associative)
+//   term   :  × ÷           (left-associative)
+//   power  :  ^             (right-associative)
+//   factor :  number | ( expr )
 export function evaluate(expr: string): number {
   if (!expr.trim()) throw new Error('Empty expression')
-  let tokens = tokenize(expr)
+  const tokens = tokenize(expr)
+  let pos = 0
 
-  // First pass: resolve × and ÷
-  let pass1: Token[] = []
-  let j = 0
-  while (j < tokens.length) {
-    const tok = tokens[j]
-    if (tok.type === 'op' && (tok.value === '×' || tok.value === '÷')) {
-      const left = pass1.pop()
-      const right = tokens[j + 1]
-      if (!left || !right || left.type !== 'number' || right.type !== 'number') {
-        throw new Error('Invalid expression')
+  const peek = (): Token | undefined => tokens[pos]
+
+  function parseExpr(): number {
+    let value = parseTerm()
+    let tok = peek()
+    while (tok?.type === 'op' && (tok.value === '+' || tok.value === '−')) {
+      pos++
+      const right = parseTerm()
+      value = tok.value === '+' ? value + right : value - right
+      tok = peek()
+    }
+    return value
+  }
+
+  function parseTerm(): number {
+    let value = parsePower()
+    let tok = peek()
+    while (tok?.type === 'op' && (tok.value === '×' || tok.value === '÷')) {
+      pos++
+      const right = parsePower()
+      value = tok.value === '×' ? value * right : value / right
+      tok = peek()
+    }
+    return value
+  }
+
+  function parsePower(): number {
+    const base = parseFactor()
+    const tok = peek()
+    if (tok?.type === 'op' && tok.value === '^') {
+      pos++
+      // Right-associative: the exponent is itself a power expression.
+      return Math.pow(base, parsePower())
+    }
+    return base
+  }
+
+  function parseFactor(): number {
+    const tok = peek()
+    if (!tok) throw new Error('Invalid expression')
+    if (tok.type === 'number') {
+      pos++
+      return tok.value
+    }
+    if (tok.type === 'paren' && tok.value === '(') {
+      pos++
+      const value = parseExpr()
+      const close = peek()
+      if (close?.type !== 'paren' || close.value !== ')') {
+        throw new Error('Mismatched parentheses')
       }
-      const result = tok.value === '×' ? left.value * right.value : left.value / right.value
-      pass1.push({ type: 'number', value: result })
-      j += 2
-    } else {
-      pass1.push(tok)
-      j++
+      pos++
+      return value
     }
+    throw new Error('Invalid expression')
   }
 
-  // Second pass: resolve + and −
-  if (pass1[0]?.type !== 'number') throw new Error('Invalid expression')
-  let acc = (pass1[0] as { type: 'number'; value: number }).value
-  let k = 1
-  while (k < pass1.length) {
-    const op = pass1[k]
-    const right = pass1[k + 1]
-    if (!op || !right || op.type !== 'op' || right.type !== 'number') {
-      throw new Error('Invalid expression')
-    }
-    acc = op.value === '+' ? acc + right.value : acc - right.value
-    k += 2
-  }
-  return acc
+  const result = parseExpr()
+  if (pos !== tokens.length) throw new Error('Invalid expression')
+  return result
 }

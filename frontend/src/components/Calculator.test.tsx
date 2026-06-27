@@ -117,4 +117,39 @@ describe('Calculator', () => {
     fireEvent.keyDown(window, { key: 'Escape' })
     expect(display().textContent).toBe('0')
   })
+
+  it('evaluates a power expression from buttons', () => {
+    const onResult = vi.fn()
+    render(<Calculator onResult={onResult} />)
+    fireEvent.click(screen.getByText('2'))
+    fireEvent.click(screen.getByText('^'))
+    fireEvent.click(screen.getByText('3'))
+    fireEvent.click(screen.getByText('='))
+    expect(onResult).toHaveBeenCalledWith('2^3', '8')
+  })
+
+  it('evaluates a parenthesized expression from buttons', () => {
+    const onResult = vi.fn()
+    render(<Calculator onResult={onResult} />)
+    fireEvent.click(screen.getByText('('))
+    fireEvent.click(screen.getByText('2'))
+    fireEvent.click(screen.getByText('+'))
+    fireEvent.click(screen.getByText('3'))
+    fireEvent.click(screen.getByText(')'))
+    fireEvent.click(screen.getByText('×'))
+    fireEvent.click(screen.getByText('4'))
+    fireEvent.click(screen.getByText('='))
+    expect(onResult).toHaveBeenCalledWith('(2+3)×4', '20')
+  })
+
+  it('supports power and parentheses via keyboard', () => {
+    const onResult = vi.fn()
+    render(<Calculator onResult={onResult} />)
+    for (const key of '(2+3)*4'.split('')) {
+      fireEvent.keyDown(window, { key })
+    }
+    expect(display().textContent).toBe('(2+3)×4')
+    fireEvent.keyDown(window, { key: 'Enter' })
+    expect(onResult).toHaveBeenCalledWith('(2+3)×4', '20')
+  })
 })
