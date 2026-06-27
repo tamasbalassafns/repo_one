@@ -28,8 +28,12 @@ export function Calculator({ onResult }: Props) {
       return
     }
     if (label === '=') {
+      // Nothing to evaluate unless the expression contains an operator.
+      // This also stops a bare result (after a prior '=') from being re-saved.
+      if (!['+', '−', '×', '÷'].some(op => expr.includes(op))) return
       try {
         const result = evaluate(expr)
+        if (!Number.isFinite(result)) throw new Error('Math error')
         const resultStr = String(parseFloat(result.toFixed(10)))
         onResult(expr, resultStr)
         setExpr(resultStr)

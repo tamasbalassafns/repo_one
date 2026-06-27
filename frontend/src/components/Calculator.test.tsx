@@ -52,4 +52,27 @@ describe('Calculator', () => {
     fireEvent.click(screen.getByText('='))
     expect(document.querySelector('.display--error')).toBeInTheDocument()
   })
+
+  it('shows error on division by zero instead of saving Infinity', () => {
+    const onResult = vi.fn()
+    render(<Calculator onResult={onResult} />)
+    fireEvent.click(screen.getByText('5'))
+    fireEvent.click(screen.getByText('÷'))
+    fireEvent.click(screen.getByText('0'))
+    fireEvent.click(screen.getByText('='))
+    expect(document.querySelector('.display--error')).toBeInTheDocument()
+    expect(onResult).not.toHaveBeenCalled()
+  })
+
+  it('does not re-save the result when = is pressed repeatedly', () => {
+    const onResult = vi.fn()
+    render(<Calculator onResult={onResult} />)
+    fireEvent.click(screen.getByText('3'))
+    fireEvent.click(screen.getByText('+'))
+    fireEvent.click(screen.getByText('5'))
+    fireEvent.click(screen.getByText('='))
+    fireEvent.click(screen.getByText('='))
+    expect(onResult).toHaveBeenCalledTimes(1)
+    expect(display().textContent).toBe('8')
+  })
 })

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Calculator } from './components/Calculator'
 import { History } from './components/History'
-import { HistoryEntry, fetchHistory, saveEntry, deleteEntry } from './api/history'
+import { fetchHistory, saveEntry, deleteEntry } from './api/history'
+import type { HistoryEntry } from './api/history'
 
 export default function App() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
