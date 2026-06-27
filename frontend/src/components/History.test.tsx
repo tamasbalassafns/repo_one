@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { History } from './History'
-import { HistoryEntry } from '../api/history'
+import type { HistoryEntry } from '../api/history'
 
 const ENTRIES: HistoryEntry[] = [
   { id: 1, expression: '3 + 5', result: '8', created_at: '2024-01-01T00:00:00Z' },
