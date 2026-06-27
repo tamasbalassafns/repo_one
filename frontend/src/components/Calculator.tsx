@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { evaluate } from '../utils/evaluate'
 
 interface Props {
@@ -12,6 +12,22 @@ const BUTTONS = [
   ['1', '2', '3', '='],
   ['0', '.'],
 ]
+
+// Maps a keyboard key to the equivalent calculator button label.
+// Digits and '.' are handled separately. ASCII operators map to the
+// Unicode symbols the evaluator expects.
+const KEY_MAP: Record<string, string> = {
+  '+': '+',
+  '-': '−',
+  '*': '×',
+  '/': '÷',
+  '.': '.',
+  '=': '=',
+  Enter: '=',
+  Backspace: '⌫',
+  Escape: 'C',
+  Delete: 'C',
+}
 
 export function Calculator({ onResult }: Props) {
   const [expr, setExpr] = useState('')
@@ -49,6 +65,22 @@ export function Calculator({ onResult }: Props) {
       setExpr(e => e + label)
     }
   }
+
+  // Keep a ref to the latest handler so the keydown listener (attached once)
+  // always sees current state without re-binding on every render.
+  const handleButtonRef = useRef(handleButton)
+  handleButtonRef.current = handleButton
+
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      const label = /^[0-9]$/.test(e.key) ? e.key : KEY_MAP[e.key]
+      if (label === undefined) return
+      e.preventDefault()
+      handleButtonRef.current(label)
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function isOperator(label: string) {
     return ['÷', '×', '−', '+'].includes(label)

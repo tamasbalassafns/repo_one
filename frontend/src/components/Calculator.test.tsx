@@ -75,4 +75,46 @@ describe('Calculator', () => {
     expect(onResult).toHaveBeenCalledTimes(1)
     expect(display().textContent).toBe('8')
   })
+
+  it('builds an expression from keyboard input', () => {
+    render(<Calculator onResult={vi.fn()} />)
+    fireEvent.keyDown(window, { key: '1' })
+    fireEvent.keyDown(window, { key: '2' })
+    fireEvent.keyDown(window, { key: '.' })
+    fireEvent.keyDown(window, { key: '5' })
+    expect(display().textContent).toBe('12.5')
+  })
+
+  it('maps keyboard operators to Unicode symbols', () => {
+    render(<Calculator onResult={vi.fn()} />)
+    fireEvent.keyDown(window, { key: '6' })
+    fireEvent.keyDown(window, { key: '-' })
+    fireEvent.keyDown(window, { key: '2' })
+    fireEvent.keyDown(window, { key: '*' })
+    fireEvent.keyDown(window, { key: '3' })
+    fireEvent.keyDown(window, { key: '/' })
+    fireEvent.keyDown(window, { key: '4' })
+    expect(display().textContent).toBe('6−2×3÷4')
+  })
+
+  it('evaluates with Enter and saves the result', () => {
+    const onResult = vi.fn()
+    render(<Calculator onResult={onResult} />)
+    fireEvent.keyDown(window, { key: '7' })
+    fireEvent.keyDown(window, { key: '+' })
+    fireEvent.keyDown(window, { key: '8' })
+    fireEvent.keyDown(window, { key: 'Enter' })
+    expect(onResult).toHaveBeenCalledWith('7+8', '15')
+    expect(display().textContent).toBe('15')
+  })
+
+  it('deletes with Backspace and clears with Escape', () => {
+    render(<Calculator onResult={vi.fn()} />)
+    fireEvent.keyDown(window, { key: '4' })
+    fireEvent.keyDown(window, { key: '2' })
+    fireEvent.keyDown(window, { key: 'Backspace' })
+    expect(display().textContent).toBe('4')
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(display().textContent).toBe('0')
+  })
 })
