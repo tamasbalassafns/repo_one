@@ -127,8 +127,8 @@ body { margin: 0; }
 }
 .btn--eq:hover { background: color-mix(in srgb, var(--eq) 32%, transparent); }
 
-/* Zero button spans two columns */
-.btn--zero { width: calc(var(--btn-size) * 2 + 8px); justify-content: flex-start; padding-left: 22px; }
+/* Equals button spans the full width of its own row */
+.btn--eq { width: 100%; }
 
 /* History panel */
 .app__history {

@@ -6,11 +6,12 @@ interface Props {
 }
 
 const BUTTONS = [
-  ['C', '⌫', '÷', '×'],
-  ['7', '8', '9', '−'],
-  ['4', '5', '6', '+'],
-  ['1', '2', '3', '='],
-  ['0', '.'],
+  ['C', '⌫', '(', ')'],
+  ['7', '8', '9', '÷'],
+  ['4', '5', '6', '×'],
+  ['1', '2', '3', '−'],
+  ['0', '.', '^', '+'],
+  ['='],
 ]
 
 // Maps a keyboard key to the equivalent calculator button label.
@@ -21,6 +22,9 @@ const KEY_MAP: Record<string, string> = {
   '-': '−',
   '*': '×',
   '/': '÷',
+  '^': '^',
+  '(': '(',
+  ')': ')',
   '.': '.',
   '=': '=',
   Enter: '=',
@@ -46,7 +50,7 @@ export function Calculator({ onResult }: Props) {
     if (label === '=') {
       // Nothing to evaluate unless the expression contains an operator.
       // This also stops a bare result (after a prior '=') from being re-saved.
-      if (!['+', '−', '×', '÷'].some(op => expr.includes(op))) return
+      if (!['+', '−', '×', '÷', '^'].some(op => expr.includes(op))) return
       try {
         const result = evaluate(expr)
         if (!Number.isFinite(result)) throw new Error('Math error')
@@ -58,7 +62,7 @@ export function Calculator({ onResult }: Props) {
       }
       return
     }
-    const ops = ['+', '−', '×', '÷']
+    const ops = ['+', '−', '×', '÷', '^']
     if (ops.includes(label) && ops.includes(expr.slice(-1))) {
       setExpr(e => e.slice(0, -1) + label)
     } else {
@@ -83,7 +87,7 @@ export function Calculator({ onResult }: Props) {
   }, [])
 
   function isOperator(label: string) {
-    return ['÷', '×', '−', '+'].includes(label)
+    return ['÷', '×', '−', '+', '^'].includes(label)
   }
 
   function isAction(label: string) {
@@ -101,7 +105,7 @@ export function Calculator({ onResult }: Props) {
             {row.map(label => (
               <button
                 key={label}
-                className={`btn${isOperator(label) ? ' btn--op' : ''}${isAction(label) ? ' btn--action' : ''}${label === '=' ? ' btn--eq' : ''}${label === '0' ? ' btn--zero' : ''}`}
+                className={`btn${isOperator(label) ? ' btn--op' : ''}${isAction(label) ? ' btn--action' : ''}${label === '=' ? ' btn--eq' : ''}`}
                 onClick={() => handleButton(label)}
               >
                 {label}
